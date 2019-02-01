@@ -11,7 +11,7 @@ Once done, it will make a call to Ansible for post provisioning configuration.
 
 ## Requirements
 
-* Azure CLI - for OS X, [Homebrew is easiest](https://brew.sh/) is easiest
+* Azure CLI - for OS X, [Homebrew is easiest](https://brew.sh/)
 * SSH key placed in `/keys` that **matches** the value of your project name
 * `terraform.tfvars` edited to your liking
 
