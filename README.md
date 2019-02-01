@@ -1,5 +1,5 @@
 # Terraform - Avi Demo Environment
-** NOTE: This is meant to be used with [Ansible Demo Spinner](https://github.com/alexfeig/avi-ansible-demo-spinner). If you don't wish to use it, please remove `azure_post_provision.tf` prior to running.
+**NOTE:** This is meant to be used with [Ansible Demo Spinner](https://github.com/alexfeig/avi-ansible-demo-spinner). If you don't wish to use it, please remove `azure_post_provision.tf` prior to running.
 
 This Terraform environment will spin up:
 
