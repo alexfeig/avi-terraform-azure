@@ -1,26 +1,33 @@
 resource "azurerm_network_interface" "web_vnic" {
-  name                      = "${var.project_name}_web_${count.index}"
-  location                  = "${var.azure_region}"
-  resource_group_name       = "${var.resource_group}"
-  network_security_group_id = "${azurerm_network_security_group.nsg_web.id}"
-  count                     = "${var.web_count}"
+  name                = "${var.project_name}_web_${count.index}"
+  location            = var.azure_region
+  resource_group_name = var.resource_group
+
+  count = var.web_count
 
   ip_configuration {
     name = "${var.project_name}_web_${count.index}"
 
-    subnet_id                     = "${element(azurerm_subnet.subnet.*.id, count.index)}"
+    subnet_id                     = element(azurerm_subnet.subnet.*.id, count.index)
     private_ip_address_allocation = "dynamic"
   }
 }
 
+resource "azurerm_network_interface_security_group_association" "web_nsg" {
+  count = var.web_count
+
+  network_interface_id      = azurerm_network_interface.web_vnic[count.index].id
+  network_security_group_id = azurerm_network_security_group.nsg_web.id
+}
+
 resource "azurerm_virtual_machine" "web" {
   name                          = "${var.project_name}_web_${count.index}"
-  location                      = "${var.azure_region}"
-  resource_group_name           = "${var.resource_group}"
-  network_interface_ids         = ["${element(azurerm_network_interface.web_vnic.*.id, count.index)}"]
-  vm_size                       = "${var.web_instance_size}"
+  location                      = var.azure_region
+  resource_group_name           = var.resource_group
+  network_interface_ids         = [element(azurerm_network_interface.web_vnic.*.id, count.index)]
+  vm_size                       = var.web_instance_size
   delete_os_disk_on_termination = "true"
-  count                         = "${var.web_count}"
+  count                         = var.web_count
 
   storage_os_disk {
     name              = "${var.project_name}_web_${count.index}"
@@ -38,7 +45,7 @@ resource "azurerm_virtual_machine" "web" {
 
   os_profile {
     computer_name  = "${var.project_name}-web-${count.index}"
-    admin_username = "${var.admin_username}"
+    admin_username = var.admin_username
   }
 
   os_profile_linux_config {
@@ -46,33 +53,35 @@ resource "azurerm_virtual_machine" "web" {
 
     ssh_keys {
       path     = "/home/${var.admin_username}/.ssh/authorized_keys"
-      key_data = "${file("keys/${var.project_name}.pub")}"
+      key_data = file("keys/${var.project_name}.pub")
     }
   }
 }
 
 resource "azurerm_virtual_machine_extension" "apache" {
-  depends_on           = ["azurerm_virtual_machine.web"]
-  name                 = "apache"
-  location             = "${var.azure_region}"
-  resource_group_name  = "${var.resource_group}"
-  virtual_machine_name = "${var.project_name}_web_${count.index}"
+  depends_on = [azurerm_virtual_machine.web]
+  name       = "apache"
+
+  virtual_machine_id   = azurerm_virtual_machine.web[count.index].id
   publisher            = "Microsoft.Azure.Extensions"
   type                 = "CustomScript"
   type_handler_version = "2.0"
-  count                = "${var.web_count}"
+  count                = var.web_count
 
   settings = <<SETTINGS
     {
         "commandToExecute": "sudo bash -c 'apt-get update && apt-get -y install apache2 && echo ${var.project_name}_web_${count.index} > /var/www/html/index.html'"
     }
-    SETTINGS
+    
+SETTINGS
+
 }
 
 locals {
-  web_addresses = "${azurerm_network_interface.web_vnic.*.private_ip_address}"
+  web_addresses = azurerm_network_interface.web_vnic.*.private_ip_address
 }
 
 output "addresses" {
-  value = "${local.web_addresses}"
+  value = local.web_addresses
 }
+

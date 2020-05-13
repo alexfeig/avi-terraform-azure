@@ -1,7 +1,7 @@
 resource "azurerm_network_security_group" "nsg_controller" {
   name                = "${var.project_name}-controller"
-  location            = "${var.azure_region}"
-  resource_group_name = "${var.resource_group}"
+  location            = var.azure_region
+  resource_group_name = var.resource_group
 
   security_rule {
     name                       = "ssh"
@@ -66,8 +66,8 @@ resource "azurerm_network_security_group" "nsg_controller" {
 
 resource "azurerm_network_security_group" "nsg_web" {
   name                = "${var.project_name}-web"
-  location            = "${var.azure_region}"
-  resource_group_name = "${var.resource_group}"
+  location            = var.azure_region
+  resource_group_name = var.resource_group
 
   security_rule {
     name                       = "ssh"
@@ -93,3 +93,4 @@ resource "azurerm_network_security_group" "nsg_web" {
     destination_address_prefix = "*"
   }
 }
+
